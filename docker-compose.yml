@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: MagicFridgeIA-postgres
+    environment:
+      POSTGRES_DB: magicfridgeia
+      POSTGRES_USER: magicfridge
+      POSTGRES_PASSWORD: magicfridge
+    ports:
+      - "5431:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

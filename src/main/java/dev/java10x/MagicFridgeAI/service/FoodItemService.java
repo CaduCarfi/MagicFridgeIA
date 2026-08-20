@@ -33,7 +33,7 @@ public class FoodItemService {
         return foodItemRepository.save(foodItem);
     }
 
-    public Void excluir(Long id) {
+    public void excluir(Long id) {
         foodItemRepository.deleteById(id);
     }
 
