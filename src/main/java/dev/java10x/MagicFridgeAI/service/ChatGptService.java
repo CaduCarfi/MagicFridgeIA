@@ -1,5 +1,6 @@
 package dev.java10x.MagicFridgeAI.service;
 
+import dev.java10x.MagicFridgeAI.model.FoodItem;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -9,6 +10,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ChatGptService {
@@ -20,8 +22,13 @@ public class ChatGptService {
         this.apiKey = apiKey;
     }
 
-    public Mono<String> generateRecipe() {
-        String prompt = "Me sugira uma receita simples com ingredientes comuns";
+    public Mono<String> generateRecipe(List<FoodItem> foodItems) {
+        String alimentos = foodItems.stream()
+                .map(item -> String.format("%s (%s) - Quantidade: %d, Validade: %s",
+                        item.getNome(), item.getCategorias(), item.getQuantidade(), item.getValidade()))
+                .collect(Collectors.joining("\n"));
+
+        String prompt = "Baseado no meu banco de dados faça uma receita com os seguintes itens:\n " + alimentos;
 
         Map<String, Object> requestBody = Map.of(
                 "model", "gpt-4o",
@@ -32,7 +39,7 @@ public class ChatGptService {
         );
 
         return webClient.post()
-                .uri("/chat/completions")  // ✅ Agora está correto
+                .uri("/chat/completions")
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                 .bodyValue(requestBody)
@@ -45,7 +52,6 @@ public class ChatGptService {
                         return message.get("content").toString();
                     }
                     return "Nenhuma receita foi gerada";
-                })
-                .onErrorReturn("Erro ao gerar receita");
+                });
     }
 }
