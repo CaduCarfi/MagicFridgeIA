@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MagicFridgeAI</title>
+<style>
+  :root {
+    --frost: #eef5f6;
+    --panel: #ffffff;
+    --ink: #1b2a2e;
+    --ink-soft: #5b6b6e;
+    --mint: #2f9e8f;
+    --mint-deep: #1f7669;
+    --citrus: #f6b445;
+    --line: #dde8e9;
+    --danger: #d9614f;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--frost);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 48px 24px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: "";
+    position: absolute;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    height: 240px;
+    background: radial-gradient(circle, rgba(47,158,143,0.18), transparent 70%);
+    pointer-events: none;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--mint-deep);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  header p {
+    margin: 10px auto 0;
+    max-width: 460px;
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+    display: grid;
+    gap: 28px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 1px 2px rgba(20, 40, 40, 0.04);
+  }
+
+  .panel h2 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .panel .sub {
+    margin: 0 0 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  form.item-form {
+    display: grid;
+    grid-template-columns: 2fr 1.4fr 0.8fr 1fr auto;
+    gap: 10px;
+  }
+
+  @media (max-width: 720px) {
+    form.item-form { grid-template-columns: 1fr 1fr; }
+  }
+
+  input, select {
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    font-size: 14px;
+    background: #fbfdfd;
+    color: var(--ink);
+    width: 100%;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--mint);
+    box-shadow: 0 0 0 3px rgba(47,158,143,0.15);
+  }
+
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    transition: transform 0.08s ease, opacity 0.15s ease;
+  }
+
+  button:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--mint);
+    color: white;
+    padding: 11px 18px;
+  }
+
+  .btn-primary:hover { background: var(--mint-deep); }
+
+  .btn-generate {
+    background: var(--citrus);
+    color: #3a2a05;
+    padding: 14px 22px;
+    font-size: 15px;
+    width: 100%;
+  }
+
+  .btn-generate:hover { filter: brightness(0.96); }
+
+  .btn-generate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .items {
+    display: grid;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fbfdfd;
+  }
+
+  .item-name {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .item-meta {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(47,158,143,0.12);
+    color: var(--mint-deep);
+    white-space: nowrap;
+  }
+
+  .badge.expiring {
+    background: rgba(217,97,79,0.12);
+    color: var(--danger);
+  }
+
+  .remove-btn {
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 18px;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+
+  .remove-btn:hover { color: var(--danger); }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px 12px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  .recipe-output {
+    margin-top: 18px;
+    padding: 18px;
+    border-radius: 10px;
+    background: #fbfdfd;
+    border: 1px dashed var(--line);
+    font-size: 14px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    min-height: 40px;
+  }
+
+  .recipe-output.loading {
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .recipe-output.error {
+    color: var(--danger);
+    border-color: rgba(217,97,79,0.35);
+    background: rgba(217,97,79,0.06);
+  }
+
+  footer {
+    text-align: center;
+    padding-bottom: 40px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Sua geladeira, organizada</div>
+  <h1>🧊 MagicFridgeAI</h1>
+  <p>Cadastre o que você tem em casa e deixe a IA sugerir uma receita com os ingredientes disponíveis.</p>
+</header>
+
+<main>
+
+  <section class="panel">
+    <h2>Adicionar item</h2>
+    <p class="sub">Preencha os dados do alimento que está na sua geladeira.</p>
+    <form class="item-form" id="itemForm">
+      <input type="text" id="nome" placeholder="Nome (ex: Tomate)" required>
+      <input type="text" id="categoria" placeholder="Categoria (ex: Legume)" required>
+      <input type="number" id="quantidade" placeholder="Qtd" min="1" required>
+      <input type="date" id="validade" required>
+      <button type="submit" class="btn-primary">Adicionar</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Itens na geladeira</h2>
+    <p class="sub">Tudo que está disponível para uma receita agora mesmo.</p>
+    <div class="items" id="itemsList">
+      <div class="empty-state">Carregando itens...</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Gerar receita</h2>
+    <p class="sub">A IA vai olhar para os itens cadastrados e sugerir algo para você cozinhar.</p>
+    <button class="btn-generate" id="generateBtn">✨ Gerar receita com IA</button>
+    <div class="recipe-output" id="recipeOutput" style="display:none;"></div>
+  </section>
+
+</main>
+
+<footer>Feito com Spring Boot + IA · Projeto de estudo</footer>
+
+<script>
+  const API_BASE = window.location.origin;
+
+  const itemsList = document.getElementById('itemsList');
+  const itemForm = document.getElementById('itemForm');
+  const generateBtn = document.getElementById('generateBtn');
+  const recipeOutput = document.getElementById('recipeOutput');
+
+  function daysUntil(dateStr) {
+    const today = new Date();
+    const target = new Date(dateStr);
+    const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    return diff;
+  }
+
+  function renderItems(items) {
+    if (!items || items.length === 0) {
+      itemsList.innerHTML = '<div class="empty-state">Nenhum item cadastrado ainda. Adicione o primeiro acima!</div>';
+      return;
+    }
+
+    itemsList.innerHTML = items.map(item => {
+      const dias = item.validade ? daysUntil(item.validade) : null;
+      const expiring = dias !== null && dias <= 3;
+      const badgeText = dias === null ? '' : (dias < 0 ? 'Vencido' : dias === 0 ? 'Vence hoje' : `${dias}d restantes`);
+
+      return `
+        <div class="item-row" data-id="${item.id ?? ''}">
+          <div>
+            <div class="item-name">${item.nome}</div>
+            <div class="item-meta">${item.categoria} · Qtd: ${item.quantidade}</div>
+          </div>
+          <span class="badge ${expiring ? 'expiring' : ''}">${badgeText}</span>
+          <span></span>
+          <button class="remove-btn" onclick="removeItem('${item.id}')" title="Remover">✕</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function loadItems() {
+    try {
+      const res = await fetch(`${API_BASE}/foodItems`);
+      if (!res.ok) throw new Error('Falha ao buscar itens');
+      const items = await res.json();
+      renderItems(items);
+    } catch (err) {
+      itemsList.innerHTML = '<div class="empty-state">Não foi possível carregar os itens. Verifique se a API está rodando.</div>';
+    }
+  }
+
+  itemForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const novoItem = {
+      nome: document.getElementById('nome').value,
+      categoria: document.getElementById('categoria').value,
+      quantidade: parseInt(document.getElementById('quantidade').value, 10),
+      validade: document.getElementById('validade').value
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/foodItems`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(novoItem)
+      });
+      if (!res.ok) throw new Error('Falha ao adicionar item');
+      itemForm.reset();
+      loadItems();
+    } catch (err) {
+      alert('Não foi possível adicionar o item. Verifique se a API está rodando.');
+    }
+  });
+
+  async function removeItem(id) {
+    if (!id) return;
+    try {
+      const res = await fetch(`${API_BASE}/foodItems/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Falha ao remover item');
+      loadItems();
+    } catch (err) {
+      alert('Não foi possível remover o item.');
+    }
+  }
+
+  generateBtn.addEventListener('click', async () => {
+    generateBtn.disabled = true;
+    generateBtn.textContent = 'Gerando receita...';
+    recipeOutput.style.display = 'block';
+    recipeOutput.className = 'recipe-output loading';
+    recipeOutput.textContent = 'A IA está pensando em algo delicioso para você...';
+
+    try {
+      const res = await fetch(`${API_BASE}/generate`);
+      if (res.status === 204) {
+        recipeOutput.className = 'recipe-output error';
+        recipeOutput.textContent = 'Nenhum item cadastrado para gerar uma receita. Adicione alguns itens primeiro.';
+        return;
+      }
+      if (!res.ok) throw new Error('Falha ao gerar receita');
+      const receita = await res.text();
+      recipeOutput.className = 'recipe-output';
+      recipeOutput.textContent = receita;
+    } catch (err) {
+      recipeOutput.className = 'recipe-output error';
+      recipeOutput.textContent = 'Não foi possível gerar a receita agora. Verifique se a API de IA está configurada corretamente.';
+    } finally {
+      generateBtn.disabled = false;
+      generateBtn.textContent = '✨ Gerar receita com IA';
+    }
+  });
+
+  loadItems();
+</script>
+
+</body>
+</html>

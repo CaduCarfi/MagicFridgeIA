@@ -52,6 +52,7 @@ public class ChatGptService {
                         return message.get("content").toString();
                     }
                     return "Nenhuma receita foi gerada";
-                });
+                })
+                .onErrorReturn("Não foi possível gerar a receita no momento. Tente novamente mais tarde.");
     }
 }
